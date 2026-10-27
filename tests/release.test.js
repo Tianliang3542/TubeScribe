@@ -31,14 +31,14 @@ test("release copy documents current scope without em dashes", () => {
   assert.doesNotMatch(manifest.description, /—/);
   assert.doesNotMatch(packageJson.description, /—/);
 
-  assert.equal(manifest.name, "YouTube Digest");
-  assert.equal(packageJson.name, "youtube-digest");
+  assert.equal(manifest.name, "TubeScribe");
+  assert.equal(packageJson.name, "tube-scribe");
   assert.match(read("scripts/package-extension.sh"), /youtube-digest-v\$version\.zip/);
   assert.doesNotMatch(
     [readme, chineseReadme, read("PRIVACY.md"), read("SECURITY.md")].join("\n"),
     /\bYT Digest\b/,
   );
-  assert.match(readme, /^# YouTube Digest$/m);
+  assert.match(readme, /^# TubeScribe$/m);
   assert.match(
     readme,
     /Turn every YouTube video into a resource for deep learning\./,
@@ -63,7 +63,7 @@ test("release copy documents current scope without em dashes", () => {
   );
   assert.match(readme, /upstream issues and pull requests are not accepted/i);
   assert.doesNotMatch(readme, /^## Contributing$/m);
-  assert.match(chineseReadme, /^# YouTube Digest$/m);
+  assert.match(chineseReadme, /^# TubeScribe$/m);
   assert.match(chineseReadme, /把每个 YouTube 视频变成一份可以深入学习的资料/);
   assert.match(chineseReadme, /^## 让你的编程 Agent 帮你安装$/m);
   assert.match(
@@ -140,7 +140,7 @@ test("release copy documents current scope without em dashes", () => {
   );
   assert.match(
     optionsPage,
-    /class="customization-steps"[\s\S]*Open the extracted YouTube Digest project folder in your coding[\s\S]*Replace \[PROVIDER\] and \[MODEL\][\s\S]*Never include API keys[\s\S]*<\/ol>/,
+    /class="customization-steps"[\s\S]*Open the extracted TubeScribe project folder in your coding[\s\S]*Replace \[PROVIDER\] and \[MODEL\][\s\S]*Never include API keys[\s\S]*<\/ol>/,
   );
   assert.match(
     optionsPage,
@@ -156,7 +156,7 @@ test("release copy documents current scope without em dashes", () => {
   assert.match(optionsScript, /Edited prompt copied\./);
   assert.match(optionsScript, /migration\.migrated[\s\S]*storage\.set/);
 
-  const customizationPrompt = `Customize this local YouTube Digest workspace to use [PROVIDER] with [MODEL]. Work only in the current workspace. Before editing, verify that it contains manifest.json and that the manifest name is YouTube Digest. If verification fails, stop and ask me to open the extracted YouTube Digest project folder in my coding agent. Do not search other folders, edit a guessed copy, assume an installation path, or claim Chrome can reveal the absolute OS source path. Update the provider's API endpoint, request format, and minimum Chrome host permissions. Preserve bring-your-own-key and local Chrome storage. Never put API keys in source code, commits, logs, screenshots, this prompt, or chat; after the code is ready, tell me where to enter the key myself. Keep DeepSeek-only request fields and retry behavior isolated to DeepSeek. Handle provider-specific rules separately so one provider does not affect another. Update README.md, README.zh-CN.md, PRIVACY.md, SECURITY.md, and tests. Run npm test, npm run check, and npm run package. Then explain how to reload the unpacked extension and test it on a real YouTube video.`;
+  const customizationPrompt = `Customize this local TubeScribe workspace to use [PROVIDER] with [MODEL]. Work only in the current workspace. Before editing, verify that it contains manifest.json and that the manifest name is TubeScribe. If verification fails, stop and ask me to open the extracted TubeScribe project folder in my coding agent. Do not search other folders, edit a guessed copy, assume an installation path, or claim Chrome can reveal the absolute OS source path. Update the provider's API endpoint, request format, and minimum Chrome host permissions. Preserve bring-your-own-key and local Chrome storage. Never put API keys in source code, commits, logs, screenshots, this prompt, or chat; after the code is ready, tell me where to enter the key myself. Keep DeepSeek-only request fields and retry behavior isolated to DeepSeek. Handle provider-specific rules separately so one provider does not affect another. Update README.md, README.zh-CN.md, PRIVACY.md, SECURITY.md, and tests. Run npm test, npm run check, and npm run package. Then explain how to reload the unpacked extension and test it on a real YouTube video.`;
   assert.ok(optionsPage.includes(`>${customizationPrompt}</textarea>`));
   assert.doesNotMatch(customizationPrompt, /Documents|USERPROFILE/);
 
@@ -166,11 +166,11 @@ test("release copy documents current scope without em dashes", () => {
   assert.match(readme, /vocabulary notebook/i);
   assert.match(
     readme,
-    /first open the exact YouTube Digest project folder that Chrome loaded through \*\*Load unpacked\*\* in your coding agent/,
+    /first open the exact TubeScribe project folder that Chrome loaded through \*\*Load unpacked\*\* in your coding agent/,
   );
   assert.match(
     chineseReadme,
-    /先在编程 Agent 中打开 Chrome 通过“加载已解压的扩展程序”使用的那个准确的 YouTube Digest 项目文件夹/,
+    /先在编程 Agent 中打开 Chrome 通过“加载已解压的扩展程序”使用的那个准确的 TubeScribe 项目文件夹/,
   );
 
   const publishedDocs = [

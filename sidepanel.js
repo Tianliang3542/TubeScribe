@@ -1,7 +1,7 @@
 /**
  * SIDE PANEL LOGIC
  *
- * Handles the UI for YouTube Digest: video detection, transcript analysis,
+ * Handles the UI for TubeScribe: video detection, transcript analysis,
  * rendering results, and export features.
  */
 
@@ -694,7 +694,7 @@ async function startDigest(videoId, videoUrl) {
     if (transcriptResult.error === "NO_SUPADATA_KEY") {
       showError(
         "API key missing",
-        "Add your Supadata API key in YouTube Digest Settings.",
+        "Add your Supadata API key in TubeScribe Settings.",
       );
       return;
     }
@@ -1389,7 +1389,7 @@ function exportTranscript() {
 
   exportText += `TRANSCRIPT:\n\n${transcriptContent}\n`;
   exportText += `\n${"—".repeat(60)}\n`;
-  exportText += `Exported by YouTube Digest\n`;
+  exportText += `Exported by TubeScribe\n`;
 
   const filename = `${sanitizeFilename(currentVideoTitle)}-transcript.txt`;
   downloadTextFile(exportText, filename);
@@ -1504,7 +1504,7 @@ function showConfigError(configStatus) {
   showState("error");
   document.getElementById("errorTitle").textContent = "API Keys Missing";
   document.getElementById("errorMessage").textContent =
-    `Add your ${missingKeys.join(" and ")} API key${missingKeys.length === 1 ? "" : "s"} in YouTube Digest Settings.`;
+    `Add your ${missingKeys.join(" and ")} API key${missingKeys.length === 1 ? "" : "s"} in TubeScribe Settings.`;
   document.getElementById("errorBtn").textContent = "Open Settings";
   errorAction = () => chrome.runtime.sendMessage({ action: "openOptions" });
 }
