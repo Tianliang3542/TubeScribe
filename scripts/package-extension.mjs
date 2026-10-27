@@ -153,7 +153,7 @@ const entries = files.map((name) => ({
 
 const zip = buildZip(entries);
 fs.mkdirSync("dist", { recursive: true });
-const output = path.join("dist", `youtube-digest-v${version}.zip`);
+const output = path.join("dist", `tube-scribe-v${version}.zip`);
 fs.writeFileSync(output, zip);
 
 const digest = crypto.createHash("sha256").update(zip).digest("hex");

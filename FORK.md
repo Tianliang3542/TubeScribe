@@ -49,7 +49,7 @@ A personal fork of YouTube Digest v1.2.0 (MIT).
 ```bash
 node --test                 # 全部测试（87 个）
 node scripts/check-release.mjs
-node scripts/package-extension.mjs   # 产出 dist/youtube-digest-v*.zip
+node scripts/package-extension.mjs   # 产出 dist/tube-scribe-v*.zip
 ```
 
 ## 仍需注意
