@@ -9,7 +9,9 @@
 > [FORK.md](FORK.md)。
 
 第一次安装？**[INSTALL.md](INSTALL.md)** 里有 Windows 和 macOS 的一句话安装命令，
-以及要填进 `chrome://extensions` 的准确路径。
+以及要填进 `chrome://extensions` 的准确路径。想把安装直接交给 AI Agent（豆包、
+WorkBuddy、Codex、Claude 都可以），复制 **[AGENT-INSTALL.md](AGENT-INSTALL.md)**
+里那段提示词即可。
 
 把每个 YouTube 视频变成一份可以深入学习的资料。TubeScribe 把字幕、双语翻译、AI 概览、内容讲解和时间戳笔记放进同一个 Chrome 侧边栏，让你可以持续学习视频中的知识和语言，同时不丢失原视频上下文。
 

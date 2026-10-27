@@ -11,7 +11,9 @@
 > what changed and why.
 
 New here? **[INSTALL.md](INSTALL.md)** has a one-line install for Windows and
-macOS, plus the exact folder path to paste into `chrome://extensions`.
+macOS, plus the exact folder path to paste into `chrome://extensions`. If you
+would rather hand the install to an AI agent (Doubao, WorkBuddy, Codex, Claude),
+copy the prompt in **[AGENT-INSTALL.md](AGENT-INSTALL.md)**.
 
 Turn every YouTube video into a resource for deep learning. TubeScribe brings transcripts, bilingual translation, AI overviews, explanations, and timestamped notes into one Chrome side panel, so you can study ideas and language without losing your place.
 
