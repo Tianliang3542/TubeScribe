@@ -43,7 +43,11 @@ var YTD_SETTINGS = (() => {
   function normalizeNotionPageId(value) {
     const raw = trimmed(value);
     if (!raw) return "";
-    const match = raw.match(/([0-9a-fA-F]{32})/);
+    // Strip separators first so a value that is already dashed stays valid.
+    // Without this, normalize() destroyed a stored page id on the next save,
+    // because the 32-character run no longer exists once hyphens are present.
+    const compact = raw.replace(/-/g, "");
+    const match = compact.match(/([0-9a-fA-F]{32})/);
     if (!match) return "";
     const hex = match[1].toLowerCase();
     return [

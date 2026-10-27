@@ -258,13 +258,37 @@ const YTD_OPTIONS = (() => {
    * the side panel never disagree. The old standalone key is still read as a
    * migration fallback for anyone who already chose a language.
    */
+  /**
+   * settings.js is a separate script tag, so it is a global in the browser and
+   * a module under Node. Resolving it lazily keeps these helpers usable in both
+   * places; the earlier version referenced a variable that only existed inside
+   * initialize() and silently threw.
+   */
+  function resolveSettingsApi() {
+    if (typeof YTD_SETTINGS !== "undefined" && YTD_SETTINGS) return YTD_SETTINGS;
+    if (typeof globalThis !== "undefined" && globalThis.YTD_SETTINGS) {
+      return globalThis.YTD_SETTINGS;
+    }
+    if (typeof require === "function") {
+      try {
+        return require("./settings.js");
+      } catch (_error) {
+        return null;
+      }
+    }
+    return null;
+  }
+
   async function readPreferredLanguage(storage) {
-    try {
-      const stored = await storage.get(settingsApi.STORAGE_KEY);
-      const settings = settingsApi.normalize(stored[settingsApi.STORAGE_KEY]);
-      if (settings.uiLanguage) return normalizeLanguage(settings.uiLanguage);
-    } catch (_error) {
-      // Fall through to the legacy key below.
+    const api = resolveSettingsApi();
+    if (api) {
+      try {
+        const stored = await storage.get(api.STORAGE_KEY);
+        const settings = api.normalize(stored[api.STORAGE_KEY]);
+        if (settings.uiLanguage) return normalizeLanguage(settings.uiLanguage);
+      } catch (_error) {
+        // Fall through to the legacy key below.
+      }
     }
     const storedLegacy = await storage.get(LANGUAGE_STORAGE_KEY);
     return normalizeLanguage(storedLegacy[LANGUAGE_STORAGE_KEY]);
@@ -273,37 +297,40 @@ const YTD_OPTIONS = (() => {
   async function persistPreferredLanguage(storage, language) {
     const normalizedLanguage = normalizeLanguage(language);
     await storage.set({ [LANGUAGE_STORAGE_KEY]: normalizedLanguage });
-    try {
-      const stored = await storage.get(settingsApi.STORAGE_KEY);
-      const settings = settingsApi.normalize(stored[settingsApi.STORAGE_KEY]);
-      await storage.set({
-        [settingsApi.STORAGE_KEY]: {
-          ...settings,
-          uiLanguage: normalizedLanguage,
-        },
-      });
-    } catch (_error) {
-      // The legacy key already records the choice.
+    const api = resolveSettingsApi();
+    if (api) {
+      try {
+        const stored = await storage.get(api.STORAGE_KEY);
+        const settings = api.normalize(stored[api.STORAGE_KEY]);
+        await storage.set({
+          [api.STORAGE_KEY]: {
+            ...settings,
+            uiLanguage: normalizedLanguage,
+          },
+        });
+      } catch (_error) {
+        // The legacy key already records the choice.
+      }
     }
     return normalizedLanguage;
   }
 
-  function fieldValue(id) {
+  function fieldValue(doc, id) {
     const element = doc.getElementById(id);
     return element ? element.value : "";
   }
 
-  function checkboxValue(id) {
+  function checkboxValue(doc, id) {
     const element = doc.getElementById(id);
     return element ? element.checked : false;
   }
 
-  function setFieldValue(id, value) {
+  function setFieldValue(doc, id, value) {
     const element = doc.getElementById(id);
     if (element) element.value = value ?? "";
   }
 
-  function setCheckboxValue(id, value) {
+  function setCheckboxValue(doc, id, value) {
     const element = doc.getElementById(id);
     if (element) element.checked = value === true;
   }
@@ -466,13 +493,13 @@ const YTD_OPTIONS = (() => {
 
         aiApiKeyInput.value = settings.aiApiKey;
         supadataApiKeyInput.value = settings.supadataApiKey;
-        setFieldValue("notionToken", settings.notionToken);
-        setFieldValue("notionPageId", settings.notionPageId);
-        setFieldValue("getnoteApiKey", settings.getnoteApiKey);
-        setFieldValue("getnoteClientId", settings.getnoteClientId);
-        setFieldValue("getnoteTopicId", settings.getnoteTopicId);
-        setCheckboxValue("keepTechnicalTerms", settings.keepTechnicalTerms);
-        setCheckboxValue("followPlayback", settings.followPlayback);
+        setFieldValue(doc, "notionToken", settings.notionToken);
+        setFieldValue(doc, "notionPageId", settings.notionPageId);
+        setFieldValue(doc, "getnoteApiKey", settings.getnoteApiKey);
+        setFieldValue(doc, "getnoteClientId", settings.getnoteClientId);
+        setFieldValue(doc, "getnoteTopicId", settings.getnoteTopicId);
+        setCheckboxValue(doc, "keepTechnicalTerms", settings.keepTechnicalTerms);
+        setCheckboxValue(doc, "followPlayback", settings.followPlayback);
         if (migration.migrated) {
           await storage.set({ [settingsApi.STORAGE_KEY]: settings });
           setStatus(saveStatus, "migrationWarning");
@@ -504,13 +531,13 @@ const YTD_OPTIONS = (() => {
         ...previous,
         aiApiKey: aiApiKeyInput.value,
         supadataApiKey: supadataApiKeyInput.value,
-        notionToken: fieldValue("notionToken"),
-        notionPageId: fieldValue("notionPageId"),
-        getnoteApiKey: fieldValue("getnoteApiKey"),
-        getnoteClientId: fieldValue("getnoteClientId"),
-        getnoteTopicId: fieldValue("getnoteTopicId"),
-        keepTechnicalTerms: checkboxValue("keepTechnicalTerms"),
-        followPlayback: checkboxValue("followPlayback"),
+        notionToken: fieldValue(doc, "notionToken"),
+        notionPageId: fieldValue(doc, "notionPageId"),
+        getnoteApiKey: fieldValue(doc, "getnoteApiKey"),
+        getnoteClientId: fieldValue(doc, "getnoteClientId"),
+        getnoteTopicId: fieldValue(doc, "getnoteTopicId"),
+        keepTechnicalTerms: checkboxValue(doc, "keepTechnicalTerms"),
+        followPlayback: checkboxValue(doc, "followPlayback"),
       });
 
       if (!settings.supadataApiKey) {
