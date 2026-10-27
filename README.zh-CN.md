@@ -8,6 +8,9 @@
 > Notion 或得到笔记；同时在 Windows 和 macOS 上都不再依赖 bash。具体改了什么、为什么改，见
 > [FORK.md](FORK.md)。
 
+第一次安装？**[INSTALL.md](INSTALL.md)** 里有 Windows 和 macOS 的一句话安装命令，
+以及要填进 `chrome://extensions` 的准确路径。
+
 把每个 YouTube 视频变成一份可以深入学习的资料。TubeScribe 把字幕、双语翻译、AI 概览、内容讲解和时间戳笔记放进同一个 Chrome 侧边栏，让你可以持续学习视频中的知识和语言，同时不丢失原视频上下文。
 
 - 把零碎字幕变成清晰、可搜索的学习资料。

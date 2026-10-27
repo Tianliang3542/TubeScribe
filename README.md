@@ -10,6 +10,9 @@
 > It also runs on Windows and macOS without bash. See [FORK.md](FORK.md) for
 > what changed and why.
 
+New here? **[INSTALL.md](INSTALL.md)** has a one-line install for Windows and
+macOS, plus the exact folder path to paste into `chrome://extensions`.
+
 Turn every YouTube video into a resource for deep learning. TubeScribe brings transcripts, bilingual translation, AI overviews, explanations, and timestamped notes into one Chrome side panel, so you can study ideas and language without losing your place.
 
 - Turn captions into a readable, searchable learning resource.
