@@ -2,6 +2,14 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
+> **This fork.** TubeScribe starts from
+> [zarazhangrui/youtube-digest](https://github.com/zarazhangrui/youtube-digest)
+> and adds four things: the transcript follows video playback by itself, Chinese
+> translation is complete by default, the interface switches between English and
+> Simplified Chinese, and one click sends the transcript to Notion or GetNote.
+> It also runs on Windows and macOS without bash. See [FORK.md](FORK.md) for
+> what changed and why.
+
 Turn every YouTube video into a resource for deep learning. TubeScribe brings transcripts, bilingual translation, AI overviews, explanations, and timestamped notes into one Chrome side panel, so you can study ideas and language without losing your place.
 
 - Turn captions into a readable, searchable learning resource.
