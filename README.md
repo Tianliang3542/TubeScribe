@@ -28,46 +28,72 @@ TubeScribe is a bring-your-own-key project installed locally from GitHub. It is 
 
 ![YouTube Digest demo](YouTube%20Digest%20demo.png)
 
-## New in v1.2.0
+## What this fork adds (v1.3.0)
 
-- Search transcript words or phrases and move through every match.
-- Use one Original, Chinese, or bilingual setting across Transcript, Overview, and Notes. New videos stay in Original by default.
-- Translate visible Overview and Notes content progressively in small cached batches.
-- Explain selected transcript text or save it directly as a timestamped note.
-- Keep your transcript position across navigation, with the panel closing automatically outside YouTube video pages.
+- The transcript scrolls itself to follow video playback, and re-anchors after you switch language mode.
+- Chinese translation is complete by default; one setting keeps technical terms in English instead.
+- Switch the interface between English and Simplified Chinese.
+- Send the transcript to Notion or GetNote with one click.
+- Runs on Windows and macOS without bash: `npm test`, `npm run check` and `npm run package` all use Node only.
 
-## Install with your coding agent
+## Install (about 2 minutes)
 
-You do not need to understand the code or use the command line. Send this message to your coding agent:
+No build step and no Chrome Web Store. You need [Git](https://git-scm.com/download) and [Node.js 20 or newer](https://nodejs.org). Node is only used by the self-check, the extension itself has no dependencies.
 
-> Download or clone this project into a permanent folder I choose, tell me its exact full path, and use that same folder for Chrome's Load unpacked step. If I need a suggestion during this first installation, offer `~/Documents/youtube-digest` on macOS or Linux, or `%USERPROFILE%\Documents\youtube-digest` on Windows, but do not assume either path. Walk me through installation and setup in simple terms. https://github.com/zarazhangrui/youtube-digest
+**Step 1: copy the project.** Decide where it should live permanently, then run one line.
 
-Your agent should:
+Windows (PowerShell):
 
-1. Ask where you want to keep the project, download or clone it there, and tell you the exact full path. If you want a suggestion, it can offer `~/Documents/youtube-digest` on macOS or Linux, or `%USERPROFILE%\Documents\youtube-digest` on Windows.
-2. Open the official Supadata and DeepSeek pages below and help you create your own accounts.
-3. Walk you through selecting the exact project folder you chose in Chrome with **Load unpacked**.
-4. Show you where to enter your API keys in the extension's **Settings** page.
-5. Open a YouTube video with captions and confirm the transcript and translation work.
+```powershell
+git clone https://github.com/Tianliang3542/TubeScribe.git "$HOME\Documents\tube-scribe"; cd "$HOME\Documents\tube-scribe"; node scripts/doctor.mjs
+```
 
-Keep this folder in the same place after installation. If you move or delete it, Chrome's unpacked extension stops working until you load the extension again from its new permanent folder.
+macOS / Linux:
 
-Never paste an API key into an AI chat, source file, screenshot, or public message. Enter keys yourself, directly in the TubeScribe Settings page. Your coding agent can point to the correct field without seeing the key.
+```bash
+git clone https://github.com/Tianliang3542/TubeScribe.git ~/Documents/tube-scribe && cd ~/Documents/tube-scribe && node scripts/doctor.mjs
+```
 
-## Install manually
+`doctor` ends by printing the exact folder path you need in step 2. If it prints any `[fail]`, fix that first.
 
-If you prefer to do it yourself:
+**Step 2: load it in Chrome.**
 
-1. Open [github.com/zarazhangrui/youtube-digest](https://github.com/zarazhangrui/youtube-digest).
-2. Choose **Code**, then **Download ZIP**.
-3. Choose a permanent folder and unzip the project there. Optional suggestions are `~/Documents/youtube-digest` on macOS or Linux, or `%USERPROFILE%\Documents\youtube-digest` on Windows. You may use a different folder.
-4. In Chrome, open `chrome://extensions`.
-5. Turn on **Developer mode**.
-6. Click **Load unpacked**.
-7. Select the exact project folder you chose, which must contain `manifest.json`.
-8. Pin TubeScribe from Chrome's Extensions menu if you want quick access.
+1. Open `chrome://extensions`
+2. Turn on **Developer mode** (top right)
+3. Click **Load unpacked**
+4. Paste the path doctor printed, then press Enter
 
-Because this is an unpacked extension, it does not update automatically. After downloading an update or changing local files, click **Reload** on the TubeScribe card at `chrome://extensions`, then refresh open YouTube tabs. Moving or deleting the source folder breaks the unpacked extension until you load it again from the new location.
+Paste the path instead of clicking through folders; selecting a parent folder fails with "manifest file is missing". After this, never move or rename the folder; the extension breaks until you load it again.
+
+**Step 3: add your two keys.** Click the TubeScribe icon, open **Settings**, and paste:
+
+| Key | What it is for | Where to get it |
+| --- | --- | --- |
+| Supadata API key | fetching the transcript | [dash.supadata.ai](https://dash.supadata.ai/auth/sign-up) |
+| DeepSeek API key | overview, translation, explanations | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
+
+Enter keys only in those two fields. Never put a key in a chat, a source file, or a screenshot.
+
+**Step 4: first run.**
+
+1. Open a normal video: `https://www.youtube.com/watch?v=...` (Shorts, live streams and members-only videos are not supported)
+2. Click the TubeScribe icon and wait for the transcript to load in the side panel
+3. Switch the top-right control to **双语 / Bilingual**; Chinese fills in line by line as you read
+4. Click a timestamp to jump to that moment; select any line to explain it or save it as a timestamped note
+5. Optional: click **Notion** or **GetNote** in the transcript toolbar to send it to your knowledge base, after filling in those credentials in Settings
+
+**Prefer to let an agent do it?** Copy the prompt in **[AGENT-INSTALL.md](AGENT-INSTALL.md)**.
+Longer walkthrough, updates and troubleshooting: **[INSTALL.md](INSTALL.md)**.
+
+## Updating
+
+```bash
+cd <the folder you cloned>
+git pull
+```
+
+Then open `chrome://extensions`, click **Reload** on the TubeScribe card, and refresh any open YouTube tab. An unpacked extension never updates by itself.
+
 
 ## Set up your API keys
 

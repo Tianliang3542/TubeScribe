@@ -44,44 +44,28 @@ test("release copy documents current scope without em dashes", () => {
     /Turn every YouTube video into a resource for deep learning\./,
   );
   assert.doesNotMatch(readme, /before deciding how much of it to watch/i);
-  assert.match(readme, /^## Install with your coding agent$/m);
+assert.match(readme, /^## Install \(about 2 minutes\)$/m);
   assert.match(
     readme,
-    /permanent folder I choose[\s\S]*tell me its exact full path[\s\S]*If I need a suggestion during this first installation[\s\S]*`~\/Documents\/youtube-digest`[\s\S]*`%USERPROFILE%\\Documents\\youtube-digest`[\s\S]*do not assume either path/,
+    /git clone https:\/\/github\.com\/Tianliang3542\/TubeScribe\.git/,
   );
-  assert.match(
-    readme,
-    /Moving or deleting the source folder breaks the unpacked extension until you load it again from the new location\./,
-  );
-  assert.match(
-    readme,
-    /selecting the exact project folder you chose in Chrome with \*\*Load unpacked\*\*/,
-  );
-  assert.match(
-    readme,
-    /Select the exact project folder you chose, which must contain `manifest\.json`/,
-  );
+  assert.match(readme, /node scripts\/doctor\.mjs/);
+  assert.match(readme, /Paste the path instead of clicking through folders/);
+  assert.match(readme, /never move or rename the folder/);
+  assert.match(readme, /^## Updating$/m);
   assert.match(readme, /upstream issues and pull requests are not accepted/i);
   assert.doesNotMatch(readme, /^## Contributing$/m);
   assert.match(chineseReadme, /^# TubeScribe$/m);
   assert.match(chineseReadme, /把每个 YouTube 视频变成一份可以深入学习的资料/);
-  assert.match(chineseReadme, /^## 让你的编程 Agent 帮你安装$/m);
+assert.match(chineseReadme, /^## 安装（大约 2 分钟）$/m);
   assert.match(
     chineseReadme,
-    /我选择的长期保留文件夹[\s\S]*告诉我准确的完整路径[\s\S]*第一次安装时需要位置建议[\s\S]*`~\/Documents\/youtube-digest`[\s\S]*`%USERPROFILE%\\Documents\\youtube-digest`[\s\S]*不要假设我一定使用这些路径/,
+    /git clone https:\/\/github\.com\/Tianliang3542\/TubeScribe\.git/,
   );
-  assert.match(
-    chineseReadme,
-    /如果移动或删除源代码文件夹，Chrome 中加载的扩展会失效，需要从新的位置重新加载。/,
-  );
-  assert.match(
-    chineseReadme,
-    /“加载已解压的扩展程序”选择你刚才确定的那个准确项目文件夹/,
-  );
-  assert.match(
-    chineseReadme,
-    /选择你刚才确定的那个准确项目文件夹，其中必须包含 `manifest\.json`/,
-  );
+  assert.match(chineseReadme, /node scripts\/doctor\.mjs/);
+  assert.match(chineseReadme, /粘贴路径，不要一层层点文件夹/);
+  assert.match(chineseReadme, /不要再移动或改名这个文件夹/);
+  assert.match(chineseReadme, /^## 更新$/m);
   assert.match(chineseReadme, /不接受上游 Issue 或 Pull Request/);
   assert.match(chineseReadme, /增加更多翻译语言/);
 

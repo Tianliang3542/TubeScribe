@@ -28,46 +28,73 @@ TubeScribe 是一个需要自行提供 API Key 的开源项目，通过 GitHub �
 
 ![YouTube Digest 双语演示](YouTube%20Digest%20demo%20bilingual.png)
 
-## v1.2.0 更新
+## 本分支新增（v1.3.0）
 
-- 搜索字幕中的单词或短语，并依次查看所有匹配位置。
-- 在 Transcript、Overview 和 Notes 中共用 Original、中文和双语设置。新视频默认保持 Original，不会自动消耗翻译 token。
-- 只翻译当前可见的 Overview 和 Notes 内容，并通过小批次渐进显示和缓存结果。
-- 选中字幕后，可以直接讲解内容或保存带时间戳的笔记。
-- 页面跳转后保留字幕阅读位置，并在离开 YouTube 视频页面时自动关闭侧边栏。
+- 逐字稿自动跟随视频播放，切换语言模式后重新回到当前朗读位置。
+- 中文默认全译；想保留英文技术词，设置里一个开关即可。
+- 界面可以在英文与简体中文之间切换。
+- 一键把逐字稿发到 Notion 或得到笔记。
+- Windows 与 macOS 都不依赖 bash：`npm test`、`npm run check`、`npm run package` 全部用 Node。
 
-## 让你的编程 Agent 帮你安装
+## 安装（大约 2 分钟）
 
-你不需要看懂代码，也不需要会使用命令行。把下面这段话发送给你的编程 Agent：
+不需要构建步骤，也不上架商店。你只需要 [Git](https://git-scm.com/download) 和 [Node.js 20 或更高版本](https://nodejs.org)，，Node 只用于自检脚本，扩展本身没有任何依赖。
 
-> 请把这个项目下载或克隆到我选择的长期保留文件夹，告诉我准确的完整路径，并让 Chrome“加载已解压的扩展程序”使用同一个文件夹。如果我在第一次安装时需要位置建议，可以推荐 macOS 或 Linux 上的 `~/Documents/youtube-digest`，或 Windows 上的 `%USERPROFILE%\Documents\youtube-digest`，但不要假设我一定使用这些路径。请用简单易懂的语言一步一步指导我完成安装和配置。https://github.com/zarazhangrui/youtube-digest
+**第 1 步：把项目复制到本地。** 先想好它要长期放在哪里，然后执行一条命令。
 
-你的 Agent 应该帮你：
+Windows（PowerShell）：
 
-1. 先询问你想把项目长期保存在哪里，再下载或克隆到那里，并告诉你准确的完整路径。如果你需要建议，可以推荐 macOS 或 Linux 上的 `~/Documents/youtube-digest`，或 Windows 上的 `%USERPROFILE%\Documents\youtube-digest`。
-2. 打开下方 Supadata 和 DeepSeek 官方页面，指导你创建自己的账号。
-3. 指导你在 Chrome 中通过“加载已解压的扩展程序”选择你刚才确定的那个准确项目文件夹。
-4. 告诉你应该在扩展的“设置”页面哪个位置填写 API Key。
-5. 打开一个带字幕的 YouTube 视频，确认字幕和翻译功能可以使用。
+```powershell
+git clone https://github.com/Tianliang3542/TubeScribe.git "$HOME\Documents\tube-scribe"; cd "$HOME\Documents\tube-scribe"; node scripts/doctor.mjs
+```
 
-安装后请让这个文件夹留在原位。如果移动或删除它，Chrome 中加载的本地扩展会失效，需要从新的长期存放位置重新加载。
+macOS / Linux：
 
-不要把 API Key 发送到 AI 对话、源代码、截图或公开消息中。请你自己在 TubeScribe 的设置页面直接填写。编程 Agent 可以告诉你填写位置，但不需要看到 Key。
+```bash
+git clone https://github.com/Tianliang3542/TubeScribe.git ~/Documents/tube-scribe && cd ~/Documents/tube-scribe && node scripts/doctor.mjs
+```
 
-## 手动安装
+命令最后会打印出第 2 步要用的**准确文件夹路径**。如果出现任何 `[fail]`，先解决再继续。
 
-如果你想自己操作：
+**第 2 步：在 Chrome 里加载它。**
 
-1. 打开 [github.com/zarazhangrui/youtube-digest](https://github.com/zarazhangrui/youtube-digest)。
-2. 点击 **Code**，再选择 **Download ZIP**。
-3. 选择一个长期保留的文件夹，并把项目解压到这里。可选建议是 macOS 或 Linux 上的 `~/Documents/youtube-digest`，或 Windows 上的 `%USERPROFILE%\Documents\youtube-digest`。你也可以使用其他文件夹。
-4. 在 Chrome 地址栏打开 `chrome://extensions`。
-5. 打开右上角的“开发者模式”。
-6. 点击“加载已解压的扩展程序”。
-7. 选择你刚才确定的那个准确项目文件夹，其中必须包含 `manifest.json`。
-8. 如果需要，可以在 Chrome 扩展菜单中固定 TubeScribe。
+1. 地址栏打开 `chrome://extensions`
+2. 打开右上角的**开发者模式**
+3. 点击**加载已解压的扩展程序**
+4. 把上一步打印的路径粘贴进选择框，回车
 
-这是一个本地加载的扩展，不会自动更新。下载新版或让 Agent 修改代码后，请在 `chrome://extensions` 中找到 TubeScribe 并点击“重新加载”，然后刷新已经打开的 YouTube 页面。如果移动或删除源代码文件夹，Chrome 中加载的扩展会失效，需要从新的位置重新加载。
+**粘贴路径，不要一层层点文件夹**，，选错上级目录会提示「找不到 manifest 文件」。装好之后不要再移动或改名这个文件夹，否则扩展会失效，需要重新加载一次。
+
+**第 3 步：填两把 Key。** 点 TubeScribe 图标打开侧边栏 → **Settings** → 粘贴：
+
+| Key | 用途 | 申请地址 |
+| --- | --- | --- |
+| Supadata API Key | 获取字幕 | [dash.supadata.ai](https://dash.supadata.ai/auth/sign-up) |
+| DeepSeek API Key | 概览、翻译、讲解 | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
+
+Key 只填在这两个输入框里。不要放进聊天、源代码或截图。
+
+**第 4 步：第一次使用。**
+
+1. 打开一个普通视频：`https://www.youtube.com/watch?v=...`（Shorts、直播、会员限定视频不支持）
+2. 点 TubeScribe 图标，等侧边栏把字幕抓下来
+3. 把面板右上角切到 **双语**，中文会随阅读逐行填上
+4. 点任意时间戳可以跳到那一刻；选中任意一句可以「讲解」或存成带时间戳的笔记
+5. 可选：填好设置页凭据后，点逐字稿工具条上的 **Notion** 或 **GetNote**，把逐字稿直接发进知识库
+
+**想让 AI Agent 帮你装？** 复制 **[AGENT-INSTALL.md](AGENT-INSTALL.md)** 里那段提示词。
+更详细的说明、更新方法和排错：**[INSTALL.md](INSTALL.md)**。
+
+## 更新
+
+```bash
+cd <你克隆的那个文件夹>
+git pull
+```
+
+然后回到 `chrome://extensions`，在 TubeScribe 卡片上点 **重新加载**，再刷新已打开的 YouTube 页面。
+已解压的扩展不会自动更新。
+
 
 ## 设置 API Key
 
