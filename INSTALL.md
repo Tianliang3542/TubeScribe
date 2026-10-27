@@ -20,9 +20,11 @@ git clone https://github.com/Tianliang3542/TubeScribe.git ~/Documents/tube-scrib
 
 ## 或者交给 AI Agent（豆包 / WorkBuddy / Codex / Claude 都能用）
 
-短版一句话：
+短版一句话（点代码块右上角的「复制」按钮）：
 
-> 把 https://github.com/Tianliang3542/TubeScribe.git 克隆到一个长期保留的文件夹（先问我放哪），运行 `node scripts/doctor.mjs`，然后告诉我准确完整路径，并指导我在 `chrome://extensions` 里用「加载已解压的扩展程序」选中它。
+```text
+把 https://github.com/Tianliang3542/TubeScribe.git 克隆到一个长期保留的文件夹（先问我放哪），运行 node scripts/doctor.mjs，然后告诉我准确完整路径，并指导我在 chrome://extensions 里用「加载已解压的扩展程序」选中它。
+```
 
 需要**带验收步骤、能一路装完**的完整版（含约束：不许索要 API Key、不许覆盖已有文件夹），
 把 **[AGENT-INSTALL.md](AGENT-INSTALL.md)** 里那段整段复制给 Agent 即可。
