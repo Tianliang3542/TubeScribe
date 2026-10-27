@@ -27,6 +27,8 @@ fail() {
 public_allowlist=(
   "manifest.json"
   "background.js"
+  "i18n.js"
+  "exporters.js"
   "settings.js"
   "content.js"
   "sidepanel.html"

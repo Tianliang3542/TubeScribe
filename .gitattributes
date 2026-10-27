@@ -1,0 +1,14 @@
+# Keep every checkout byte-identical on Windows and macOS/Linux.
+# The extension parses prompts/*.md with regular expressions that used to break
+# when Git rewrote LF to CRLF on a Windows checkout, so text files are pinned to
+# LF no matter what core.autocrlf says on the machine doing the clone.
+* text=auto eol=lf
+
+# Never let Git touch binary assets.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.zip binary

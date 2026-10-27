@@ -96,6 +96,15 @@ function sendTranslationMessage(message) {
 
 // --- Auto-scroll state (follow video playback in transcript) ---
 let autoScrollEnabled = true; // True = scroll transcript to follow video playback
+// User preference loaded at startup: follow playback without being asked?
+let followPlaybackPreference = true;
+// Last playback time reported by the content script, used to re-anchor the
+// transcript after the list is rebuilt.
+let lastPlaybackSeconds = 0;
+
+// Interface language for the panel chrome (zh-CN | en). Kept as a literal so
+// this file still loads in a bare test sandbox that has no i18n globals.
+let interfaceLanguage = "zh-CN";
 let autoScrollInterval = null; // setInterval ID for polling video time
 let lastAutoScrollTime = 0; // Timestamp of last programmatic scroll (ignores scroll events within 1s)
 
@@ -253,6 +262,12 @@ function groupTranscriptEntries(entries, limits = TRANSCRIPT_SEGMENT_LIMITS) {
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
+  void initFollowPlaybackPreference();
+  void initInterfaceLanguage();
+  watchInterfaceLanguage();
+  document.getElementById("uiLanguageBtn")?.addEventListener("click", () => {
+    void toggleInterfaceLanguage();
+  });
   setTranscriptModeButtons("original");
   setupEventListeners();
   await evictOldCacheEntries(20);
@@ -421,6 +436,12 @@ function setupEventListeners() {
   document
     .getElementById("exportTranscriptBtn")
     ?.addEventListener("click", exportTranscript);
+  document
+    .getElementById("exportNotionBtn")
+    ?.addEventListener("click", () => exportTranscriptTo("notion"));
+  document
+    .getElementById("exportGetnoteBtn")
+    ?.addEventListener("click", () => exportTranscriptTo("getnote"));
   document.querySelectorAll(".transcript-mode-btn").forEach((button) => {
     button.addEventListener("click", () => {
       handleDisplayLanguageModeChange(button.dataset.transcriptMode);
@@ -1374,6 +1395,64 @@ function exportTranscript() {
   downloadTextFile(exportText, filename);
 }
 
+/**
+ * Markdown sent to knowledge bases. Deliberately plain so Notion and GetNote
+ * both keep it readable without either service rewriting the structure.
+ */
+function buildExportMarkdown() {
+  const title = currentVideoTitle || "YouTube transcript";
+  const url = currentVideoId
+    ? `https://www.youtube.com/watch?v=${currentVideoId}`
+    : "";
+  const lines = [`# ${title}`, ""];
+  if (currentChannelName) lines.push(`- Channel: ${currentChannelName}`);
+  if (url) lines.push(`- URL: ${url}`);
+  lines.push("", "---", "", getDisplayedTranscriptText());
+  return lines.join("\n");
+}
+
+/**
+ * Sends the transcript to a knowledge base and reports the result on the
+ * button itself, so the panel needs no extra toast surface.
+ */
+async function exportTranscriptTo(service) {
+  const buttonId =
+    service === "notion" ? "exportNotionBtn" : "exportGetnoteBtn";
+  const button = document.getElementById(buttonId);
+  const label = button ? button.textContent : "";
+  if (button) {
+    button.disabled = true;
+    button.textContent = "...";
+  }
+  try {
+    const response = await chrome.runtime.sendMessage({
+      action: service === "notion" ? "exportToNotion" : "exportToGetnote",
+      title: currentVideoTitle || "YouTube transcript",
+      markdown: buildExportMarkdown(),
+    });
+    if (!response || response.success !== true) {
+      throw new Error((response && response.error) || "Export failed");
+    }
+    if (button) {
+      button.textContent = "OK";
+      button.title = response.url || "Exported";
+    }
+  } catch (error) {
+    console.error("[YouTube Digest] Export error:", error);
+    if (button) {
+      button.textContent = "!";
+      button.title = error.message || "Export failed";
+    }
+  } finally {
+    if (button) {
+      button.disabled = false;
+      setTimeout(() => {
+        button.textContent = label;
+      }, 2500);
+    }
+  }
+}
+
 // ============================================================
 // UI STATE MANAGEMENT
 // ============================================================
@@ -2235,8 +2314,12 @@ function startPlaybackTracking() {
   // Don't restart if already tracking (preserves user's auto-scroll state)
   if (autoScrollInterval) return;
 
+  // Following playback is the default. A saved reading position is only
+  // restored when the user has turned following off, otherwise reopening a
+  // video would silently resume paused at an old offset.
   const willRestoreReadingPosition =
-    pendingTranscriptViewState?.videoId === currentVideoId;
+    pendingTranscriptViewState?.videoId === currentVideoId &&
+    !followPlaybackPreference;
   autoScrollEnabled = !willRestoreReadingPosition;
   document.getElementById("followPlaybackBtn").style.display =
     willRestoreReadingPosition ? "block" : "none";
@@ -2248,6 +2331,119 @@ function startPlaybackTracking() {
   const contentArea = document.getElementById("contentArea");
   contentArea.removeEventListener("scroll", onContentAreaScroll);
   contentArea.addEventListener("scroll", onContentAreaScroll);
+  attachFollowPlaybackGestures(contentArea);
+}
+
+/**
+ * Detects real scrolling intent. Only a wheel turn or a finger drag counts;
+ * scroll events are ignored because the panel scrolls itself while translations
+ * stream in, which used to look like the user grabbing the transcript.
+ */
+function attachFollowPlaybackGestures(contentArea) {
+  if (!contentArea) return;
+  for (const type of ["wheel", "touchmove"]) {
+    contentArea.removeEventListener(type, onFollowPlaybackGesture);
+    contentArea.addEventListener(type, onFollowPlaybackGesture, {
+      passive: true,
+    });
+  }
+}
+
+function onFollowPlaybackGesture() {
+  if (!autoScrollInterval || !autoScrollEnabled) return;
+  disableFollowPlayback();
+}
+
+function disableFollowPlayback() {
+  autoScrollEnabled = false;
+  const button = document.getElementById("followPlaybackBtn");
+  if (button) button.style.display = "block";
+}
+
+/**
+ * Re-anchors the transcript after it has been rebuilt. Switching language mode
+ * replaces every row, which resets scrollTop and drops the playback highlight;
+ * without this the panel appears stuck at the top while the video plays on.
+ */
+function resyncFollowAfterRender() {
+  if (!autoScrollEnabled || !autoScrollInterval) return;
+  requestAnimationFrame(() => {
+    if (!autoScrollEnabled || !autoScrollInterval) return;
+    highlightActiveEntry(lastPlaybackSeconds);
+    scrollToActiveEntry();
+  });
+}
+
+/**
+ * Reads the stored follow-playback preference once at panel startup.
+ */
+async function initFollowPlaybackPreference() {
+  try {
+    const stored = await chrome.storage.local.get(YTD_SETTINGS.STORAGE_KEY);
+    const settings = YTD_SETTINGS.normalize(stored[YTD_SETTINGS.STORAGE_KEY]);
+    followPlaybackPreference = settings.followPlayback !== false;
+  } catch (error) {
+    console.error("[YouTube Digest] Follow playback preference error:", error);
+    followPlaybackPreference = true;
+  }
+}
+
+/**
+ * Applies the interface language and keeps the switch button in sync.
+ */
+function applyPanelLanguage(language) {
+  if (typeof YTD_I18N === "undefined") return;
+  interfaceLanguage = YTD_I18N.normalizeLanguage(language);
+  YTD_I18N.applyInterfaceLanguage(interfaceLanguage);
+  const button = document.getElementById("uiLanguageBtn");
+  if (button) {
+    button.textContent = YTD_I18N.t("languageButtonShort", interfaceLanguage);
+  }
+}
+
+async function readSettingsSnapshot() {
+  try {
+    const stored = await chrome.storage.local.get(YTD_SETTINGS.STORAGE_KEY);
+    return YTD_SETTINGS.normalize(stored[YTD_SETTINGS.STORAGE_KEY]);
+  } catch (error) {
+    console.error("[YouTube Digest] Settings read error:", error);
+    return YTD_SETTINGS.normalize({});
+  }
+}
+
+async function initInterfaceLanguage() {
+  const settings = await readSettingsSnapshot();
+  applyPanelLanguage(settings.uiLanguage);
+}
+
+async function persistInterfaceLanguage(language) {
+  const settings = await readSettingsSnapshot();
+  await chrome.storage.local.set({
+    [YTD_SETTINGS.STORAGE_KEY]: { ...settings, uiLanguage: language },
+  });
+}
+
+async function toggleInterfaceLanguage() {
+  if (typeof YTD_I18N === "undefined") return;
+  const next = YTD_I18N.nextLanguage(interfaceLanguage);
+  applyPanelLanguage(next);
+  await persistInterfaceLanguage(next);
+}
+
+/**
+ * Keeps the panel in sync when the options page changes the language.
+ */
+function watchInterfaceLanguage() {
+  if (!chrome.storage.onChanged?.addListener) return;
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local" || !changes[YTD_SETTINGS.STORAGE_KEY]) return;
+    const settings = YTD_SETTINGS.normalize(
+      changes[YTD_SETTINGS.STORAGE_KEY].newValue,
+    );
+    if (settings.uiLanguage !== interfaceLanguage) {
+      applyPanelLanguage(settings.uiLanguage);
+    }
+  });
 }
 
 /**
@@ -2285,6 +2481,7 @@ async function playbackTrackingTick() {
     if (!result.success || !result.response) return;
 
     const currentTime = result.response.currentTime || 0;
+    lastPlaybackSeconds = currentTime;
     highlightActiveEntry(currentTime);
   } catch (error) {
     // Silently ignore — YouTube tab might be closed or navigated away
@@ -2360,15 +2557,11 @@ function highlightActiveEntry(currentSeconds) {
 function onContentAreaScroll() {
   scheduleTranscriptViewStateSave();
 
-  // Ignore scroll events within 1 second of a programmatic scroll
-  // (smooth scroll animations can last longer than a simple boolean flag)
-  if (Date.now() - lastAutoScrollTime < 1000) return;
-
-  // User scrolled manually — disable auto-scroll and show the button
-  if (autoScrollEnabled && autoScrollInterval) {
-    autoScrollEnabled = false;
-    document.getElementById("followPlaybackBtn").style.display = "block";
-  }
+  // Scroll events alone no longer pause following. Programmatic smooth
+  // scrolling, layout shifts while translations stream in, and rebuilding the
+  // transcript all fire scroll events, so they cannot distinguish user intent.
+  // Real intent is detected by the wheel/touch listeners attached in
+  // startPlaybackTracking.
 }
 
 /**
@@ -2657,6 +2850,7 @@ function renderTranscriptModeRows(segments, mode) {
   refreshTranscriptSearch({ preserveIndex: false, scroll: false });
 
   startPlaybackTracking();
+  resyncFollowAfterRender();
   return rows;
 }
 

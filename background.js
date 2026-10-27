@@ -13,7 +13,7 @@
 
 // Import safe defaults and validation helpers. Secret keys live in
 // chrome.storage.local and are never part of the extension source.
-importScripts("settings.js");
+importScripts("settings.js", "exporters.js");
 
 const DEBUG = false;
 const AI_PROVIDER_IDLE_TIMEOUT_MS = 50_000;
@@ -45,12 +45,34 @@ async function loadPromptSection(fileName, heading, variables = {}) {
     if (!response.ok) {
       throw new Error(`Could not load prompt file: ${fileName}`);
     }
-    markdown = await response.text();
+    // Prompt files are authored with LF. A Windows checkout under
+    // core.autocrlf=true, a ZIP download, or an editor can leave CRLF behind,
+    // which made the fence regex miss and every prompt fail with a misleading
+    // "section not found" error. Normalise here so parsing never depends on how
+    // the repository happened to be checked out.
+    markdown = (await response.text()).replace(/\r\n?/g, "\n");
     promptFileCache.set(fileName, markdown);
   }
 
+  // Match the heading as a complete line. A plain indexOf would let
+  // "## Chinese rules" match "## Chinese rules — full translation" whenever the
+  // longer heading happens to come first in the file.
   const marker = `## ${heading}`;
-  const markerIndex = markdown.indexOf(marker);
+  let markerIndex = -1;
+  for (let from = 0; ; ) {
+    const candidate = markdown.indexOf(marker, from);
+    if (candidate === -1) break;
+    const nextCharacter = markdown[candidate + marker.length];
+    if (
+      nextCharacter === undefined ||
+      nextCharacter === "\n" ||
+      nextCharacter === "\r"
+    ) {
+      markerIndex = candidate;
+      break;
+    }
+    from = candidate + marker.length;
+  }
   if (markerIndex === -1) {
     throw new Error(`Prompt section not found: ${fileName}#${heading}`);
   }
@@ -60,9 +82,11 @@ async function loadPromptSection(fileName, heading, variables = {}) {
     sectionStart,
     nextSection === -1 ? markdown.length : nextSection,
   );
-  const fenceMatch = section.match(/```(?:[A-Za-z0-9_-]+)?\n([\s\S]*?)\n```/);
+  const fenceMatch = section.match(/```(?:[A-Za-z0-9_-]+)?\r?\n([\s\S]*?)\r?\n```/);
   if (!fenceMatch) {
-    throw new Error(`Prompt section not found: ${fileName}#${heading}`);
+    throw new Error(
+      `Prompt section "${heading}" in ${fileName} has no fenced code block`,
+    );
   }
 
   let prompt = fenceMatch[1];
@@ -428,6 +452,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       message.targetLanguage,
       message.videoTitle,
     )
+      .then(sendResponse)
+      .catch((err) => sendResponse({ success: false, error: err.message }));
+    return true;
+  }
+
+  if (message.action === "exportToNotion") {
+    handleExportToNotion(message)
+      .then(sendResponse)
+      .catch((err) => sendResponse({ success: false, error: err.message }));
+    return true;
+  }
+
+  if (message.action === "exportToGetnote") {
+    handleExportToGetnote(message)
       .then(sendResponse)
       .catch((err) => sendResponse({ success: false, error: err.message }));
     return true;
@@ -1507,18 +1545,29 @@ async function handleExplainSelection(
  * @param {string} targetLanguage - Must be 'zh'
  * @returns {Promise<string>} - The base translation rules
  */
-async function getTranslationBaseRules(targetLanguage) {
+async function getTranslationBaseRules(targetLanguage, options = {}) {
   if (targetLanguage !== "zh") {
     throw new Error(`Unsupported translation target: ${targetLanguage}`);
   }
   const langName = "Simplified Chinese";
+  // Default is a complete translation. Keeping AI, API, skill and friends in
+  // English is opt-in, because a half-English sentence reads as an unfinished
+  // translation to most learners.
+  const keepTechnicalTerms = options.keepTechnicalTerms === true;
   const langSpecific = await loadPromptSection(
     "translation.md",
-    "Chinese rules",
+    keepTechnicalTerms ? "Chinese rules" : "Chinese rules — full translation",
+  );
+  const termRule = await loadPromptSection(
+    "translation.md",
+    keepTechnicalTerms
+      ? "Term policy — keep technical terms"
+      : "Term policy — full translation",
   );
   return loadPromptSection("translation.md", "Shared base rules", {
     langName,
     langSpecific,
+    termRule,
   });
 }
 
@@ -1626,7 +1675,9 @@ async function handleTranslateContent(
 
     const sourceSegments = validateTranscriptBatchRequest(content);
     const langName = "Simplified Chinese";
-    const baseRules = await getTranslationBaseRules(targetLanguage);
+    const baseRules = await getTranslationBaseRules(targetLanguage, {
+      keepTechnicalTerms: settings.keepTechnicalTerms === true,
+    });
     const promptSection =
       contentType === "transcriptBatch"
         ? "Transcript batch translation"
@@ -1714,10 +1765,51 @@ async function callAiTranslation(
   }
 }
 
+// ============================================================
+// KNOWLEDGE-BASE EXPORT
+// ============================================================
+
+/**
+ * Sends the current transcript to the user's Notion page.
+ */
+async function handleExportToNotion(payload = {}) {
+  const settings = await getSettings();
+  if (!settings.notionToken) {
+    return {
+      success: false,
+      error: "Notion integration token is not configured",
+    };
+  }
+  return YTD_EXPORTERS.createNotionPage({
+    token: settings.notionToken,
+    pageId: settings.notionPageId,
+    title: payload.title || "YouTube transcript",
+    markdown: payload.markdown || "",
+  });
+}
+
+/**
+ * Sends the current transcript to the user's GetNote knowledge base.
+ */
+async function handleExportToGetnote(payload = {}) {
+  const settings = await getSettings();
+  return YTD_EXPORTERS.createGetnoteNote({
+    apiKey: settings.getnoteApiKey,
+    clientId: settings.getnoteClientId,
+    title: payload.title || "YouTube transcript",
+    markdown: payload.markdown || "",
+    tags: Array.isArray(payload.tags) ? payload.tags : [],
+    topicId: settings.getnoteTopicId,
+  });
+}
+
 // Pure validators are exposed for the repository's Node tests only.
 globalThis.__YTD_TRANSLATION_TESTING__ = {
   requestAiCompletion,
   callAiTranslation,
+  loadPromptSection,
+  handleExportToNotion,
+  handleExportToGetnote,
   validateTranscriptBatchRequest,
   normalizeTranslatedSegmentBatch,
   handleSaveNote,

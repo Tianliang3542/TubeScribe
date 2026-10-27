@@ -253,15 +253,59 @@ const YTD_OPTIONS = (() => {
     };
   }
 
+  /**
+   * The interface language lives in the shared settings object so this page and
+   * the side panel never disagree. The old standalone key is still read as a
+   * migration fallback for anyone who already chose a language.
+   */
   async function readPreferredLanguage(storage) {
-    const stored = await storage.get(LANGUAGE_STORAGE_KEY);
-    return normalizeLanguage(stored[LANGUAGE_STORAGE_KEY]);
+    try {
+      const stored = await storage.get(settingsApi.STORAGE_KEY);
+      const settings = settingsApi.normalize(stored[settingsApi.STORAGE_KEY]);
+      if (settings.uiLanguage) return normalizeLanguage(settings.uiLanguage);
+    } catch (_error) {
+      // Fall through to the legacy key below.
+    }
+    const storedLegacy = await storage.get(LANGUAGE_STORAGE_KEY);
+    return normalizeLanguage(storedLegacy[LANGUAGE_STORAGE_KEY]);
   }
 
   async function persistPreferredLanguage(storage, language) {
     const normalizedLanguage = normalizeLanguage(language);
     await storage.set({ [LANGUAGE_STORAGE_KEY]: normalizedLanguage });
+    try {
+      const stored = await storage.get(settingsApi.STORAGE_KEY);
+      const settings = settingsApi.normalize(stored[settingsApi.STORAGE_KEY]);
+      await storage.set({
+        [settingsApi.STORAGE_KEY]: {
+          ...settings,
+          uiLanguage: normalizedLanguage,
+        },
+      });
+    } catch (_error) {
+      // The legacy key already records the choice.
+    }
     return normalizedLanguage;
+  }
+
+  function fieldValue(id) {
+    const element = doc.getElementById(id);
+    return element ? element.value : "";
+  }
+
+  function checkboxValue(id) {
+    const element = doc.getElementById(id);
+    return element ? element.checked : false;
+  }
+
+  function setFieldValue(id, value) {
+    const element = doc.getElementById(id);
+    if (element) element.value = value ?? "";
+  }
+
+  function setCheckboxValue(id, value) {
+    const element = doc.getElementById(id);
+    if (element) element.checked = value === true;
   }
 
   function updateLanguageButtonState(buttons, language) {
@@ -422,6 +466,13 @@ const YTD_OPTIONS = (() => {
 
         aiApiKeyInput.value = settings.aiApiKey;
         supadataApiKeyInput.value = settings.supadataApiKey;
+        setFieldValue("notionToken", settings.notionToken);
+        setFieldValue("notionPageId", settings.notionPageId);
+        setFieldValue("getnoteApiKey", settings.getnoteApiKey);
+        setFieldValue("getnoteClientId", settings.getnoteClientId);
+        setFieldValue("getnoteTopicId", settings.getnoteTopicId);
+        setCheckboxValue("keepTechnicalTerms", settings.keepTechnicalTerms);
+        setCheckboxValue("followPlayback", settings.followPlayback);
         if (migration.migrated) {
           await storage.set({ [settingsApi.STORAGE_KEY]: settings });
           setStatus(saveStatus, "migrationWarning");
@@ -444,9 +495,22 @@ const YTD_OPTIONS = (() => {
       event.preventDefault();
       setStatus(saveStatus, "saving");
 
+      // Merge onto what is already stored. Rebuilding the object from two
+      // inputs silently erased every other preference, including the
+      // knowledge-base credentials.
+      const stored = await storage.get(settingsApi.STORAGE_KEY);
+      const previous = settingsApi.normalize(stored[settingsApi.STORAGE_KEY]);
       const settings = settingsApi.normalize({
+        ...previous,
         aiApiKey: aiApiKeyInput.value,
         supadataApiKey: supadataApiKeyInput.value,
+        notionToken: fieldValue("notionToken"),
+        notionPageId: fieldValue("notionPageId"),
+        getnoteApiKey: fieldValue("getnoteApiKey"),
+        getnoteClientId: fieldValue("getnoteClientId"),
+        getnoteTopicId: fieldValue("getnoteTopicId"),
+        keepTechnicalTerms: checkboxValue("keepTechnicalTerms"),
+        followPlayback: checkboxValue("followPlayback"),
       });
 
       if (!settings.supadataApiKey) {

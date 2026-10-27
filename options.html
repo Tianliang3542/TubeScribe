@@ -117,6 +117,103 @@
           </div>
         </section>
 
+        <section class="card">
+          <h2>播放与翻译 · Playback &amp; translation</h2>
+          <label
+            style="display: flex; gap: 8px; align-items: flex-start"
+            for="keepTechnicalTerms"
+          >
+            <input
+              id="keepTechnicalTerms"
+              name="keepTechnicalTerms"
+              type="checkbox"
+            />
+            <span>
+              技术词保留英文（AI、API、skill 等）· Keep technical terms in
+              English
+            </span>
+          </label>
+          <p class="help">
+            关闭时默认全译，只保留人名、品牌、产品名和代码标识。When off, every
+            word is translated except names, brands, product names and code
+            identifiers.
+          </p>
+          <label
+            style="display: flex; gap: 8px; align-items: flex-start"
+            for="followPlayback"
+          >
+            <input id="followPlayback" name="followPlayback" type="checkbox" />
+            <span>逐字稿跟随视频自动滚动 · Follow playback automatically</span>
+          </label>
+        </section>
+
+        <section class="card">
+          <h2>知识库导出 · Knowledge base export</h2>
+          <p class="help">
+            可选。填写后逐字稿工具条上的 Notion 和 GetNote 按钮才会工作。密钥只保存在本机
+            Chrome 里。Optional; those buttons stay inactive until this is filled
+            in.
+          </p>
+
+          <label for="notionToken">Notion 集成 Token · Integration token</label>
+          <input
+            id="notionToken"
+            name="notionToken"
+            type="password"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="secret_ 或 ntn_ 开头 · starts with secret_ or ntn_"
+          />
+          <label for="notionPageId">Notion 目标页面 · Target page ID or URL</label>
+          <input
+            id="notionPageId"
+            name="notionPageId"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="粘贴页面链接或 32 位 ID · paste the page URL or the 32-character ID"
+          />
+          <p class="help">
+            还要到该页面右上角「连接 / Connections」里把集成添加进去，否则会报无权限。Share
+            the page with the integration, otherwise Notion returns 403.
+          </p>
+
+          <label for="getnoteApiKey">得到笔记 API Key · GetNote API key</label>
+          <input
+            id="getnoteApiKey"
+            name="getnoteApiKey"
+            type="password"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="gk_live_ 开头 · starts with gk_live_"
+          />
+          <label for="getnoteClientId">得到笔记 Client ID · Client ID</label>
+          <input
+            id="getnoteClientId"
+            name="getnoteClientId"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="cli_ 开头 · starts with cli_"
+          />
+          <label for="getnoteTopicId"
+            >得到笔记 笔记本 ID（可选）· Topic ID (optional)</label
+          >
+          <input
+            id="getnoteTopicId"
+            name="getnoteTopicId"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="留空则进默认笔记本 · leave blank for the default notebook"
+          />
+          <p class="help">
+            在 biji.com/openapi 创建应用后可获得 API Key 与 Client ID，两者缺一不可。需要付费会员，每日最多新建
+            1000 条笔记。Create an app at biji.com/openapi for both values; a paid
+            membership is required.
+          </p>
+        </section>
+
         <div class="form-actions">
           <button class="primary" type="submit" data-i18n="saveSettings">
             Save settings
