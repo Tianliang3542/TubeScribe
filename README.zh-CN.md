@@ -38,7 +38,7 @@ TubeScribe 是一个需要自行提供 API Key 的开源项目，通过 GitHub �
 
 ## 安装（大约 2 分钟）
 
-不需要构建步骤，也不上架商店。你只需要 [Git](https://git-scm.com/download) 和 [Node.js 20 或更高版本](https://nodejs.org)，，Node 只用于自检脚本，扩展本身没有任何依赖。
+不需要构建步骤，也不上架商店。你只需要 [Git](https://git-scm.com/download) 和 [Node.js 20 或更高版本](https://nodejs.org)，Node 只用于自检脚本，扩展本身没有任何依赖。
 
 **第 1 步：把项目复制到本地。** 先想好它要长期放在哪里，然后执行一条命令。
 
@@ -63,7 +63,7 @@ git clone https://github.com/Tianliang3542/TubeScribe.git ~/Documents/tube-scrib
 3. 点击**加载已解压的扩展程序**
 4. 把上一步打印的路径粘贴进选择框，回车
 
-**粘贴路径，不要一层层点文件夹**，，选错上级目录会提示「找不到 manifest 文件」。装好之后不要再移动或改名这个文件夹，否则扩展会失效，需要重新加载一次。
+**粘贴路径，不要一层层点文件夹**，选错上级目录会提示「找不到 manifest 文件」。装好之后不要再移动或改名这个文件夹，否则扩展会失效，需要重新加载一次。
 
 **第 3 步：填两把 Key。** 点 TubeScribe 图标打开侧边栏 → **Settings** → 粘贴：
 
